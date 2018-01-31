@@ -1,0 +1,19 @@
+
+<h1>Customization: New Cat</h1>
+
+<p>
+	Use the embedded editor below to write custom logic to manipulate a new cat record. The data for the cat will
+	be available in <code>context.body</code>. You can return new data by modifying passing <code>{cat: modifiedData}</code> to the callback. New properties will be automatically saved to the cat. You can modify existing properties as well.
+</p>
+
+
+<div id="new-cat-editor" class="ae-editor"></div>
+<script>
+ExtendEditor.create(document.getElementById('new-cat-editor'), {
+	hostUrl: 'https://webtask.it.auth0.com',
+	webtaskContainer: 'ext-ba8ac0f7e7e1496ac4035c780fcc9992',
+	token: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IjIifQ.eyJqdGkiOiI5NDA5ZjM4MGE5N2E0OTNlOWM2ODRlYzY1MjhhYWNmMyIsImlhdCI6MTUxNDY0NDQyNCwiY2EiOlsiY2RjOTQ5MTQ1Njk1NDA5N2E0ZWE0ZDA2YjI1ZWI1YTMiXSwiZGQiOjIsInRlbiI6ImV4dC1iYThhYzBmN2U3ZTE0OTZhYzQwMzVjNzgwZmNjOTk5MiIsInNpZCI6ImV4dGVuZC1mcmVlbWl1bTpnaXRodWJ8MzkzNjYwIn0.csT-cgQmmSTnknDoaYDPwNKPrwQ0JlWi3-0s2vjjLvE',
+	webtaskName:'on_new_cat',
+	createIfNotExists: true
+});
+</script>

@@ -1,0 +1,39 @@
+
+
+<h1>Cat Index</h1>
+<p>
+	Below is your current listing of cat data. You may click on a cat's name to edit it, or use the delete
+	link at the end to remove it. Adding a cat may be done by using the button at the bottom.
+</p>
+
+<table class="table table-bordered">
+<thead class="thead-dark">
+	<tr>
+	<th scope="col">Name</th>
+	<th scope="col">Age</th>
+	<th scope="col">Gender</th>
+	<th scope="col">Breed</th>
+	<th scope="col">Adopted</th>
+	<th scope="col"></th>
+	</tr>
+</thead>
+<tbody>
+	{{#each cats}}
+	<tr>
+	<td><a href="edit?id={{this.id}}">{{this.name}}</a></td>
+	<td>{{this.age}}</td>
+	<td>{{this.gender}}</td>
+	<td>{{this.breed}}</td>
+	<td>{{#if this.adopted}}Yes{{else}}No{{/if}}</td>
+	<td>
+		<a href="adopt?id={{this.id}}" class="btn btn-success">Adopt</a>
+		<a href="delete?id={{this.id}}" class="btn btn-danger">Delete</a>
+	</td>
+	</tr>
+	{{/each}}
+</tbody>
+</table>
+
+<p>
+<a href="/edit" class="btn btn-success">Intake New Cat</a>
+</p>

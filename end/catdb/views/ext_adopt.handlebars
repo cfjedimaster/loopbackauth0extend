@@ -1,0 +1,19 @@
+
+<h1>Customization: Adopt Cat</h1>
+
+<p>
+	Use the embedded editor below to write custom logic to add custom logic for when a cat is adopted. The data for the cat will
+	be available in <code>context.body</code>. 
+</p>
+
+
+<div id="adopt-cat-editor" class="ae-editor"></div>
+<script>
+ExtendEditor.create(document.getElementById('adopt-cat-editor'), {
+	hostUrl: 'https://webtask.it.auth0.com',
+	webtaskContainer: 'ext-ba8ac0f7e7e1496ac4035c780fcc9992',
+	token: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IjIifQ.eyJqdGkiOiI5NDA5ZjM4MGE5N2E0OTNlOWM2ODRlYzY1MjhhYWNmMyIsImlhdCI6MTUxNDY0NDQyNCwiY2EiOlsiY2RjOTQ5MTQ1Njk1NDA5N2E0ZWE0ZDA2YjI1ZWI1YTMiXSwiZGQiOjIsInRlbiI6ImV4dC1iYThhYzBmN2U3ZTE0OTZhYzQwMzVjNzgwZmNjOTk5MiIsInNpZCI6ImV4dGVuZC1mcmVlbWl1bTpnaXRodWJ8MzkzNjYwIn0.csT-cgQmmSTnknDoaYDPwNKPrwQ0JlWi3-0s2vjjLvE',
+	webtaskName:'on_adopt_cat',
+	createIfNotExists: true
+});
+</script>

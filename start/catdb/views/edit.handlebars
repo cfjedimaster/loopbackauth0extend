@@ -1,0 +1,41 @@
+
+
+<h1>Edit Cat</h1>
+
+<form action="/edit" method="post">
+	<input type="hidden" name="id" value="{{cat.id}}">
+
+	<div class="form-group">
+		<label for="name">Name</label>
+		<input type="text" class="form-control" id="name" name="name" placeholder="Enter the cat's name." value="{{cat.name}}">
+	</div>
+
+	<div class="form-group">
+		<label for="age">Age</label>
+		<input type="text" class="form-control" id="age" name="age" placeholder="Enter the cat's age." value="{{cat.age}}">
+	</div>
+
+	<div class="form-group">
+		<label for="breed">Breed</label>
+		<input type="text" class="form-control" id="breed" name="breed" placeholder="Enter the cat's breed." value="{{cat.breed}}">
+	</div>
+
+	<div class="form-group">
+		<label for="gender">Gender</label>
+		<select class="form-control" id="gender" name="gender">
+		<option {{#if male}}selected{{/if}}>male</option>
+		<option {{#unless male}}selected{{/unless}}>female</option>
+		</select>
+	</div>
+
+	<div class="form-group">
+		<label for="gender">Adopted</label>
+		<select class="form-control" id="adopted" name="adopted">
+		<option {{#if adopted}}selected{{/if}} value="true">Yes</option>
+		<option {{#unless adopted}}selected{{/unless}} value="false">No</option>
+		</select>
+	</div>
+
+	<button type="submit" class="btn btn-primary">Save</button>
+
+</form>
