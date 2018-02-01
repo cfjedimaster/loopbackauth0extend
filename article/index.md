@@ -97,4 +97,65 @@ So by itself, we've got a simple Node app that allows for CRUD (Create, Read, Up
 Adding Customizations with Auth0 Extend
 --
 
+Lets quickly recap what we currently have. We have an application that lets users login and manage an inventory of cats. It's a simple CRUD system that handles basic data management, and that's it. You can imagine releasing this to your clients, patting yourself on the back for a job well done.
 
+And then it happens.
+
+First, one user asks if they can modify the validation logic.
+
+Then another user asks if they can add an "alert" system for when an adoption occurs. 
+
+Again and again you run into clients of your application who need small (well, small to them) tweaks to the basic behavior of your application in order to fit their business needs. 
+
+One possible solution would be to use web hooks. In that scenario, you let the user enter the URL of an API they manage and you update your code to hit their API. That works, but puts the onus on the client to setup and manage a server just to handle a simple bit of logic. 
+
+[Auth0 Extend](https://auth0.com/extend/) solves this problem by providing a service that allows you to add customizations (extension points) to your application that your own users can manage. In some ways you can think of it as a serverless platform as a service, but instead of a generic system like Amazon Lamdda, Auth0 Extend provides a much more focused platform tailored for your users. 
+
+![Auth0 Extend](img/auth0.png)
+
+Auth0 Extend has very deep customization and security support, but we can walk through the process of setting up some simple "extension points" to the application. In order to proceed, you will want to click the "Sign Up" button on the upper right hand of the screen. When done, you'll end up on a screen with this information:
+
+![Auth0 Extend Credentials](img/auth02.png)
+
+Make note of the values as you'll need them later. Also note that the code I'll be showing can be found, in it's completed form, in the `end` folder in the zip file you downloaded for this tutorial. The only changes you will need to make is including your credentials. 
+
+The first thing we need to do is identify where we want to add support for Auth0 Extend. In our fictitious scenario here, we will add three different customizations:
+
+* First, we will provide a way to add custom logic when a cat is created. LoopBack provides a simple way to hook into that event (conventiently called [operation hooks](https://loopback.io/doc/en/lb3/Operation-hooks.html)).
+* Next, we'll add similar support for handling the edit of a cat. 
+* Finally, we'll add support to do something custom when a cat is adopted.
+
+I began by adding a bit of UI to the site, in this case, a simple top level menu:
+
+![New menu](img/topmenu.png)
+
+The drop down menu has three links, one for each of the customizations we'll support with Auth0 Extend. Now we need to actually build support for the extension. There's 2 main things we'll need to do.
+
+1) First, we need to provide a way to let the user edit custom code. Auth0 Extend provides a web based editor that is incredibly simple to use. It is incredibly powerful - allowing for debugging, testing, and more. 
+2) We then need to add support to call the custom code saved by the user. That part will depend on your platform. In general, it is "just" a HTTP call, but obviously how you do that will depend on your particular server-side code.
+
+For the first customization, we told the Node app to load a view called `ext_new.handlebars`. Let's look at that.
+
+	<h1>Customization: New Cat</h1>
+
+	<p>
+		Use the embedded editor below to write custom logic to manipulate a new cat record. The data for the cat will
+		be available in <code>context.body</code>. You can return new data by modifying passing <code>{cat: modifiedData}</code> to the callback. New properties will be automatically saved to the cat. You can modify existing properties as well.
+	</p>
+
+
+	<div id="new-cat-editor" class="ae-editor"></div>
+	<script>
+	ExtendEditor.create(document.getElementById('new-cat-editor'), {
+		hostUrl: 'https://webtask.it.auth0.com',
+		webtaskContainer: 'YOUR CONTAINER',
+		token: 'YOUR TOKEN',
+		webtaskName:'on_new_cat',
+		createIfNotExists: true,
+		fullscreen:{
+			enabled:true
+		}
+	});
+	</script>
+
+The stuff on top is simple text, but notice we've used it as a way to provide some direction to the user. The important part is the JavaScript code below. 
