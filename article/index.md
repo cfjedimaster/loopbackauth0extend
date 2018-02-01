@@ -158,4 +158,171 @@ For the first customization, we told the Node app to load a view called `ext_new
 	});
 	</script>
 
-The stuff on top is simple text, but notice we've used it as a way to provide some direction to the user. The important part is the JavaScript code below. 
+The stuff on top is simple text, but notice we've used it as a way to provide some direction to the user. The important part is the JavaScript code below. This code will add the embedded editor onto the web page. You need to change both the `webtaskContainer` and `token` values to match the keys you were given earlier. Also note the `webtaskName` value. This gives a label to the extension being used, in this case one that will handle logic for new cats. So how does it look?
+
+![Embedded Editor](img/cust1.png)
+
+You've got a miniature JavaScript editor right in the browser. You'll get color coding, warnings about syntax errors, and more as you type. The editor supports quite a bit out of the box and you have multiple options to configure what it shown to end users. For example, one of the features allows you to add metadata to your extension. This is useful for things like API keys. If you think this is not something your users will need, you can disable it. You also have control over the theme if you want to make it match your "corporate" style guide. 
+
+Here's an example customization:
+
+	http://localhost:3000/#module.exports = function(context, cb) {
+	var cat = context.body;
+	cat.intakeDate = new Date();
+	cb(null, { cat: cat });
+	};
+
+In this case, we take the cat passed to the extension, add a new value (`intakeDate`), and return it. 
+
+Now comes the crucial but. We've added in support for the user to write their extension, but then how do we use it? This part is specific to the application you've written. In our case, we can add code to LoopBack that runs when the cat is created. You can find this in `common/models/cat.js`. Here is that file, with part taken out for brevity:
+
+	'use strict';
+
+	const request = require('request');
+
+	const auth0ExtendURL = 'fillmeout';
+	const auth0Token = 'ditto';
+
+	module.exports = function(Cat) {
+
+		Cat.observe('before save', function(ctx, next) {
+
+			if(ctx.isNewInstance) {
+
+				let options = {
+					method:'POST',
+					url:auth0ExtendURL +'on_new_cat',
+					headers:{'Authorization':`Bearer ${auth0Token}`},
+					json:ctx.instance
+				};
+
+				request(options, function(error, response, body) {
+					if(error) throw new Error(error);
+					for(let key in body.cat) {
+						ctx.instance[key] = body.cat[key];
+					};
+
+					next();
+				});
+
+			} else {
+				
+				//removed for now
+				
+			}
+
+		});
+
+	};
+
+This is an example of what LoopBack calls an "operation hook". It lets you tie into any data related operation. LoopBack also supports "remote hooks" which are specific to API calls. In our case, we want to run some logic before a cat is added to the database (or in our case, a local file) so an operation hook makes sense. LoopBack passes data about the operation in the `ctx` argument and we've got a handy `isNewInstance` property we can check to recogognize a new cat.
+
+In order to "run" the extension the user wrote, you need to specify two values up on top. The `auth0ExtendURL` one is a bit tricky. You need to take the container key you were given and add `.run.webtask.io`. So if your container key was 'ilikecats', then your URL would be: https://ilikecats.run.webtask.io/. The token value can be passed in as it was displayed to you. 
+
+With these values, we can then make a request to the code and take the response. In this case we're assuming that the cat was modified somehow so we simply copy the properties over. 
+
+The rest of the setup follows the same pattern. If you look at `ext_edit.handlerbars` and `ext_adopt.handlebars`, the only thing that changes is the introductory text and the `webtaskName` value for the editor. Let's instead go back to cat.js and look at the support for them within the operation hook:
+
+	let options = {
+		method:'POST',
+		url:auth0ExtendURL +'on_edit_cat',
+		headers:{'Authorization':`Bearer ${auth0Token}`},
+		json:ctx.data
+	};
+
+	request(options, function(error, response, body) {
+		if(error) throw new Error(error);
+
+		if(body.error) {
+			let err = new Error(body.message);
+			err.statusCode = 400;
+			next(err);
+		} else {
+			for(let key in body.cat) {
+				ctx.data[key] = body.cat[key];
+			};
+
+			// now handle adoption
+			if(ctx.data.adopted && !ctx.currentInstance.adopted) {
+				console.log('do adoption');
+				options.url = auth0ExtendURL + 'on_adopt_cat';
+				request(options, function(error, response, body) { });						
+			}
+			next();
+		}
+
+	});
+
+In this case, I've specified both "edit" and "adopt" extension support in one branch of the hook. First, I call `on_edit_cat`. Our docs for the extension suggest using it for validation so in this case, I'm looking for a returned error from their code. If `body.error` exists, then something wasn't valid and we can grab the message and return an error to LoopBack. Here's a good example of what that extension could look like:
+
+	module.exports = function(context, cb) {
+	var cat = context.body;
+	if(cat.name === 'ray') {
+		cb(new Error('Bad name!'));
+	} else {
+		cb(null, { cat: cat });
+	}
+	};
+
+In this case, my custom validation doesn't like it when a cat is named ray. Not a particularly realistic example, but you can see right away how easy it is for a user to specify very particular logic rules. 
+
+Finally, the "adopt" extension is a bit cool. Imagine you want to send an email when a cat is adopted. One way to do would be with the sendgrid npm module. Auth0 Extend lets you use any custom module you can find at npm. You begin by clicking the wrench icon:
+
+![Tools menu](img/npm1.png)
+
+Selecting `NPM Modules` opens a UI to let you add a new module:
+
+![NPM Support](img/npm2.png)
+
+Just click add and type "sendgrid"
+
+![Even more NPM Support](img/npm3.png)
+
+Just select it and it will be added to the list of modules supported for the extension. Now you can use code like this:
+
+	var SG_KEY = 'replace me with a sendgrid key';
+	var helper = require('sendgrid').mail;
+
+	module.exports = function(context, cb) {
+		var cat = context.body;
+		var from_email = new helper.Email('raymondcamden@gmail.com');
+		var to_email = new helper.Email('raymondcamden@gmail.com');
+		var subject = 'Cat Adoption';
+
+		var content = `
+	This cat was adopted:
+	Name: ${cat.name}
+	Breed: ${cat.breed}
+	Age: ${cat.age}
+	Gender: ${cat.gender}
+	`;
+
+		var mailContent = new helper.Content('text/plain', content);
+		var mail = new helper.Mail(from_email, subject, to_email, mailContent);
+		var sg = require('sendgrid')(SG_KEY);
+
+		var request = sg.emptyRequest({
+			method: 'POST',
+			path: '/v3/mail/send',
+			body: mail.toJSON()
+		});
+			
+		sg.API(request, function(error, response) {
+			if(error) {
+				console.log(error.response.body);
+			} else {
+				//right now we do nothing really
+				cb(null, context.body);
+			}
+		});
+	
+	
+	};
+
+In this case, the extension will send me an email with details about the cat that was just adopted. Be sure to change `SG_KEY` to a valid sendgrid and for the love of everything thats holy please change the email address as well. 
+
+![Please change that email address - pretty please!](img/email.png)
+
+Going Further
+---
+
