@@ -326,3 +326,4 @@ In this case, the extension will send me an email with details about the cat tha
 Going Further
 ---
 
+In this tutorial we covered how to add Auth0 Extend support to an application. We barely scratched the surface in terms of the level of integration that could be added, but hopefully you see the power of the platform, especially in terms of how much power it then gives to your own users. To dig deeper, go into the [Developer's Guide](https://auth0.com/extend/docs/developer-guide) and see what else can be done!
